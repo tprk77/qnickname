@@ -22,7 +22,7 @@ use std::io::{self, Write};
 
 mod qnicknames;
 
-use crate::qnicknames::QHashMap;
+use crate::qnicknames::get_qnickname;
 
 fn prompt_name() -> io::Result<String> {
     let mut input_str = String::new();
@@ -38,17 +38,12 @@ fn prompt_name() -> io::Result<String> {
 }
 
 fn qmain() -> io::Result<()> {
-    let name = prompt_name()?;
     // It's guaranteed to be non-empty
-    let first_char = name.chars().flat_map(|c| c.to_lowercase()).nth(0).unwrap();
-    let remaining_chars = name.chars().flat_map(|c| c.to_lowercase())
-        .skip(1).take(20).collect::<Vec<char>>();
-    // Use the first character to get the group of possible QNickNames
-    if let Some(qvec) = QHashMap.get(&first_char) {
+    let name = prompt_name()?;
+    // Get the actual qnickname
+    if let Some(qnickname) = get_qnickname(&name) {
         // Use the remaining characters for an offset
-        let offset = remaining_chars.iter().map(|c| *c as usize).sum::<usize>();
-        let qname = qvec.get(offset % qvec.len()).unwrap();
-        println!("Your QNickName is: {}", qname);
+        println!("Your QNickName is: {}", qnickname);
     } else {
         // This may happen if we get a weird character
         println!("You don't have a name! (Sorry!)");

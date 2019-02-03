@@ -22,6 +22,18 @@ use lazy_static::lazy_static;
 
 use std::collections::HashMap;
 
+pub fn get_qnickname(name: &str) -> Option<String> {
+    let first_char = name.chars().flat_map(|c| c.to_lowercase()).nth(0).unwrap();
+    let remaining_chars = name.chars().flat_map(|c| c.to_lowercase())
+        .skip(1).take(20).collect::<Vec<char>>();
+    // Use the first character to get the group of possible QNickNames
+    QHashMap.get(&first_char).and_then(|qnickname_vec| {
+        // Use the remaining characters for an offset
+        let offset = remaining_chars.iter().map(|c| *c as usize).sum::<usize>();
+        qnickname_vec.get(offset % qnickname_vec.len()).map(|s| s.to_string())
+    })
+}
+
 lazy_static!{
     pub static ref QHashMap: HashMap<char, Vec<&'static str>> = {
         let mut m = HashMap::new();
