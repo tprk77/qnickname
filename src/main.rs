@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 use std::io::{self, Write};
+use getopts::Options;
 
 mod qnicknames;
 
@@ -51,7 +52,26 @@ fn qmain() -> io::Result<()> {
     Ok(())
 }
 
+fn print_usage_and_exit(program: &str, opts: &Options) -> ! {
+    let _ = writeln!(io::stderr(), "{}", opts.usage(&opts.short_usage(&program)));
+    std::process::exit(1);
+}
+
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let program = args[0].clone();
+    let mut opts = Options::new();
+    opts.optflag("h", "help", "Print this help menu");
+    let opt_matches = match opts.parse(&args[1..]) {
+        Ok(m) => m,
+        Err(error) => {
+            let _ = writeln!(io::stderr(), "Error: {}", error);
+            print_usage_and_exit(&program, &opts);
+        }
+    };
+    if opt_matches.free.len() > 0 || opt_matches.opt_present("h") {
+        print_usage_and_exit(&program, &opts);
+    }
     if let Err(error) = qmain() {
         let _ = writeln!(io::stderr(), "Error: {}", error);
         std::process::exit(1);
