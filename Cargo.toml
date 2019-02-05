@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 lazy_static = "1.2.0"
 getopts = "0.2"
+slack = "0.22.0"
