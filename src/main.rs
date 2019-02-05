@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std::io::{self, Write};
 use getopts::Options;
+use std::io::{self, Write};
 
 mod qnicknames;
 
@@ -44,10 +44,10 @@ fn qmain() -> io::Result<()> {
     // Get the actual qnickname
     if let Some(qnickname) = get_qnickname(&name) {
         // Use the remaining characters for an offset
-        println!("Your QNickName is: {}", qnickname);
+        println!("Your QNickname is: {}", qnickname);
     } else {
         // This may happen if we get a weird character
-        println!("You don't have a name! (Sorry!)");
+        println!("You don't have a QNickname! (Sorry!)");
     }
     Ok(())
 }
