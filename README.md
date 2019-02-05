@@ -12,6 +12,13 @@ For technical reasons, QNickName is written in Rust.
 
 ## How To Build ##
 
+If you haven't install Rust yet, you can do that easily with [`rustup`][1]!
+
+```text
+# See also: https://rustup.rs/
+curl https://sh.rustup.rs -sSf | sh
+```
+
 Unfortunately, you will not be able to use CMake or QMake to build this project.
 
 ```text
@@ -29,3 +36,7 @@ tim@QComputer:~/qnickname$ ./target/release/qnickname
 Please enter your name: Tim
 Your QNickName is: QTranslator
 ```
+
+<!-- References -->
+
+[1]: https://rustup.rs/
