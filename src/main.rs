@@ -21,8 +21,10 @@
 use getopts::Options;
 use std::io::{self, Write};
 
+mod qnicknamebot;
 mod qnicknames;
 
+use crate::qnicknamebot::QNicknameBot;
 use crate::qnicknames::get_qnickname;
 
 fn prompt_name() -> io::Result<String> {
@@ -38,7 +40,7 @@ fn prompt_name() -> io::Result<String> {
     Ok(input_str)
 }
 
-fn qmain() -> io::Result<()> {
+fn qmain_prompt() -> io::Result<()> {
     // It's guaranteed to be non-empty
     let name = prompt_name()?;
     // Get the actual qnickname
@@ -52,6 +54,11 @@ fn qmain() -> io::Result<()> {
     Ok(())
 }
 
+fn qmain_bot(api_token: &str) -> Result<(), slack::Error> {
+    let mut qnicknamebot = QNicknameBot::new(api_token);
+    qnicknamebot.run()
+}
+
 fn print_usage_and_exit(program: &str, opts: &Options) -> ! {
     let _ = writeln!(io::stderr(), "{}", opts.usage(&opts.short_usage(&program)));
     std::process::exit(1);
@@ -61,6 +68,7 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let program = args[0].clone();
     let mut opts = Options::new();
+    opts.optopt("s", "slackbot", "Start a QSlackBot", "API-TOKEN");
     opts.optflag("h", "help", "Print this help menu");
     let opt_matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
@@ -72,8 +80,15 @@ fn main() {
     if opt_matches.free.len() > 0 || opt_matches.opt_present("h") {
         print_usage_and_exit(&program, &opts);
     }
-    if let Err(error) = qmain() {
-        let _ = writeln!(io::stderr(), "Error: {}", error);
-        std::process::exit(1);
+    if let Some(api_token) = opt_matches.opt_str("s") {
+        if let Err(error) = qmain_bot(&api_token) {
+            let _ = writeln!(io::stderr(), "Error: {}", error);
+            std::process::exit(1);
+        }
+    } else {
+        if let Err(error) = qmain_prompt() {
+            let _ = writeln!(io::stderr(), "Error: {}", error);
+            std::process::exit(1);
+        }
     }
 }
