@@ -18,21 +18,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use slack::{Event, RtmClient};
+use slack::{Event, Event::Message, Message::Standard, RtmClient};
 
-struct QHandler;
+fn is_dm_channel(channel: &str) -> bool {
+    match channel.chars().nth(0) {
+        Some(first_char) => first_char == 'D',
+        None => false,
+    }
+}
+
+fn message_contains_mention(bot_id: &str, message_text: &str) -> bool {
+    // Something like: "<@UFYA397T8> Translate: Tim"
+    let bot_id_pattern = format!("<@{}>", bot_id);
+    message_text.contains(&bot_id_pattern)
+}
+
+struct QHandler {
+    bot_id: String,
+}
 
 impl slack::EventHandler for QHandler {
     fn on_connect(&mut self, _client: &RtmClient) {
-        println!("on_connect");
+        println!("QNicknameBot connected!");
     }
 
     fn on_close(&mut self, _client: &RtmClient) {
-        println!("on_close");
+        // Do nothing
     }
 
     fn on_event(&mut self, _client: &RtmClient, event: Event) {
-        println!("on_event(event: {:?})", event);
+        let general_message = match &event {
+            Message(m) => m.as_ref(),
+            _ => return,
+        };
+        let message = match general_message {
+            Standard(m) => m,
+            _ => return,
+        };
+        let channel = message.channel.as_ref().unwrap();
+        let message_text = message.text.as_ref().unwrap();
+        if is_dm_channel(channel) {
+            println!("Got a DM!");
+        } else if message_contains_mention(&self.bot_id, message_text) {
+            println!("Got a mention!");
+        }
     }
 }
 
@@ -44,10 +73,9 @@ pub struct QNicknameBot {
 impl QNicknameBot {
     pub fn new(api_token: &str) -> QNicknameBot {
         let bot_id = QNicknameBot::get_bot_id(&api_token).unwrap();
-        println!("BOT_ID = {:?}", bot_id);
         QNicknameBot {
             api_token: api_token.to_string(),
-            handler: QHandler,
+            handler: QHandler { bot_id },
         }
     }
 
