@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use lazy_static::lazy_static;
+use regex::Regex;
 use slack::{Event, Event::Message, Message::Standard, RtmClient};
 
 fn is_dm_channel(channel: &str) -> bool {
@@ -31,6 +33,11 @@ fn message_contains_mention(bot_id: &str, message_text: &str) -> bool {
     // Something like: "<@UFYA397T8> Translate: Tim"
     let bot_id_pattern = format!("<@{}>", bot_id);
     message_text.contains(&bot_id_pattern)
+}
+
+lazy_static! {
+    static ref TRANSLATE_NAME_REGEX: Regex =
+        Regex::new(r"(?m)[Tt]ranslate:[[:space:]]+([[:alpha:]].*)$").unwrap();
 }
 
 struct QHandler {
@@ -57,11 +64,17 @@ impl slack::EventHandler for QHandler {
         };
         let channel = message.channel.as_ref().unwrap();
         let message_text = message.text.as_ref().unwrap();
-        if is_dm_channel(channel) {
-            println!("Got a DM!");
-        } else if message_contains_mention(&self.bot_id, message_text) {
-            println!("Got a mention!");
+        // Make sure we only process a DM or a mention
+        if !is_dm_channel(channel) && !message_contains_mention(&self.bot_id, message_text) {
+            return;
         }
+        // Check this message for name request
+        let captures = TRANSLATE_NAME_REGEX.captures(message_text);
+        let name = captures
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str())
+            .unwrap_or("N/A");
+        println!("Name: {}", name);
     }
 }
 
