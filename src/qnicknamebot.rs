@@ -20,7 +20,8 @@
 
 use lazy_static::lazy_static;
 use regex::Regex;
-use slack::{Event, Event::Message, Message::Standard, RtmClient};
+use slack::{Event, Event::Message, Message::Standard, RtmClient, Sender};
+use std::io::{self, Write};
 
 fn is_dm_channel(channel: &str) -> bool {
     match channel.chars().nth(0) {
@@ -42,6 +43,7 @@ lazy_static! {
 
 struct QHandler {
     bot_id: String,
+    sender: Sender,
 }
 
 impl slack::EventHandler for QHandler {
@@ -75,22 +77,25 @@ impl slack::EventHandler for QHandler {
             .map(|m| m.as_str())
             .unwrap_or("N/A");
         println!("Name: {}", name);
+        if let Err(error) = self.sender.send_message(channel, "Hello friend.") {
+            let _ = writeln!(io::stderr(), "Error (Ignored): {}", error);
+        }
     }
 }
 
 pub struct QNicknameBot {
-    api_token: String,
+    client: RtmClient,
     handler: QHandler,
 }
 
 impl QNicknameBot {
-    pub fn new(api_token: &str) -> Result<QNicknameBot, slack::Error> {
+    pub fn login(api_token: &str) -> Result<QNicknameBot, slack::Error> {
         let bot_id = QNicknameBot::get_bot_id(&api_token)?
             .ok_or_else(|| slack::Error::Internal("No bot ID".to_string()))?;
-        Ok(QNicknameBot {
-            api_token: api_token.to_string(),
-            handler: QHandler { bot_id },
-        })
+        let client = RtmClient::login(api_token)?;
+        let sender = client.sender().clone();
+        let handler = QHandler { bot_id, sender };
+        Ok(QNicknameBot { client, handler })
     }
 
     fn get_bot_id(api_token: &str) -> Result<Option<String>, slack::Error> {
@@ -109,6 +114,6 @@ impl QNicknameBot {
     }
 
     pub fn run(&mut self) -> Result<(), slack::Error> {
-        RtmClient::login_and_run(&self.api_token, &mut self.handler)
+        self.client.run(&mut self.handler)
     }
 }
