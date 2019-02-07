@@ -21,7 +21,10 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use slack::{Event, Event::Message, Message::Standard, RtmClient, Sender};
+use std::borrow::Cow;
 use std::io::{self, Write};
+
+use crate::qnicknames::get_qnickname;
 
 fn is_dm_channel(channel: &str) -> bool {
     match channel.chars().nth(0) {
@@ -72,12 +75,21 @@ impl slack::EventHandler for QHandler {
         }
         // Check this message for name request
         let captures = TRANSLATE_NAME_REGEX.captures(message_text);
-        let name = captures
-            .and_then(|c| c.get(1))
-            .map(|m| m.as_str())
-            .unwrap_or("N/A");
-        println!("Name: {}", name);
-        if let Err(error) = self.sender.send_message(channel, "Hello friend.") {
+        let real_name = captures.and_then(|c| c.get(1)).map(|m| m.as_str());
+        // Get the QNickname and form a response
+        let resp_message_text: Cow<'static, str> = if let Some(real_name) = real_name {
+            match get_qnickname(real_name) {
+                Some(qnickname) => Cow::Owned(format!("Your QNickname is: *{}*", qnickname)),
+                None => Cow::Borrowed("You don't have a QNickname! (Sorry!)"),
+            }
+        } else {
+            Cow::Borrowed(
+                "*Sorry I can't understand that!* :exploding_head:\n\
+                 Try typing: \"Translate: [Your Real Name Here]\"",
+            )
+        };
+        // Finally send the response out
+        if let Err(error) = self.sender.send_message(channel, &resp_message_text) {
             let _ = writeln!(io::stderr(), "Error (Ignored): {}", error);
         }
     }
