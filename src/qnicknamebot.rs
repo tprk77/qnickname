@@ -84,25 +84,27 @@ pub struct QNicknameBot {
 }
 
 impl QNicknameBot {
-    pub fn new(api_token: &str) -> QNicknameBot {
-        let bot_id = QNicknameBot::get_bot_id(&api_token).unwrap();
-        QNicknameBot {
+    pub fn new(api_token: &str) -> Result<QNicknameBot, slack::Error> {
+        let bot_id = QNicknameBot::get_bot_id(&api_token)?
+            .ok_or_else(|| slack::Error::Internal("No bot ID".to_string()))?;
+        Ok(QNicknameBot {
             api_token: api_token.to_string(),
             handler: QHandler { bot_id },
-        }
+        })
     }
 
-    fn get_bot_id(api_token: &str) -> Option<String> {
-        let client = slack::api::requests::default_client().unwrap();
-        let response = slack::api::users::list(&client, api_token, &Default::default());
-        let users = response.as_ref().unwrap().members.as_ref().unwrap();
+    fn get_bot_id(api_token: &str) -> Result<Option<String>, slack::Error> {
+        let client = slack::api::default_client()?;
+        let response = slack::api::users::list(&client, api_token, &Default::default())
+            .map_err(|_| slack::Error::Internal("Bad bot ID request".to_string()))?;
+        let users = response.members.as_ref().unwrap();
         let qn_bot_users: Vec<&slack::User> = users
             .iter()
             .filter(|user| user.is_bot.unwrap() && user.name.as_ref().unwrap() == "qnicknamebot")
             .collect();
         match qn_bot_users.as_slice() {
-            [qn_bot_user] => Some(qn_bot_user.id.as_ref().unwrap().to_string()),
-            _ => None,
+            [qn_bot_user] => Ok(Some(qn_bot_user.id.as_ref().unwrap().to_string())),
+            _ => Ok(None),
         }
     }
 

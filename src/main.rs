@@ -55,7 +55,7 @@ fn qmain_prompt() -> io::Result<()> {
 }
 
 fn qmain_bot(api_token: &str) -> Result<(), slack::Error> {
-    let mut qnicknamebot = QNicknameBot::new(api_token);
+    let mut qnicknamebot = QNicknameBot::new(api_token)?;
     qnicknamebot.run()
 }
 
