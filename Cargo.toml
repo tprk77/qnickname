@@ -5,5 +5,7 @@ authors = ["Tim Perkins <tprk77@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-lazy_static = "1.2.0"
 getopts = "0.2"
+lazy_static = "1.2.0"
+regex = "1"
+slack = "0.22.0"
