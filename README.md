@@ -1,14 +1,14 @@
-# QNickName #
+# QNickname #
 
 Have you ever wondered, if I was a Qt class, which one would I be? Of the
 millions of QClasses, which one would connect to QTrue? Through sophisticated
-QMachineLearning we can now determine anyone's QNickName with QCertainty. So
-make sure your QBrain has a public QSlot open, and we will QEmit your QNickName
+QMachineLearning we can now determine anyone's QNickname with QCertainty. So
+make sure your QBrain has a public QSlot open, and we will QEmit your QNickname
 directly into your QOpticNerve.
 
 ## Background ##
 
-For technical reasons, QNickName is written in Rust.
+For technical reasons, QNickname is written in Rust.
 
 ## How To Build ##
 
@@ -34,7 +34,7 @@ Refer to this QExample:
 ```text
 tim@QComputer:~/qnickname$ ./target/release/qnickname
 Please enter your name: Tim
-Your QNickName is: QTranslator
+Your QNickname is: QTranslator
 ```
 
 <!-- References -->
